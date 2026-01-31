@@ -1,4 +1,4 @@
-import { JSX } from 'react';
+import type { JSX } from 'react';
 
 type ShareButtonProps = {
   onClick: () => void;

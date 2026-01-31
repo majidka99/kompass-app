@@ -129,8 +129,19 @@ export default function Sidebar({
           className="sidebar-item logout-button"
           onClick={() =>
             void (async () => {
-              await supabase.auth.signOut();
-              if (!isDesktop) setIsOpen(false);
+              try {
+                const { error } = await supabase.auth.signOut();
+                if (error) {
+                  console.error('Logout error:', error.message);
+                  // Still close sidebar even if logout has issues
+                }
+                if (!isDesktop) setIsOpen(false);
+                // Clear any local storage if needed
+                localStorage.removeItem('lastAchievementShown');
+              } catch (err) {
+                console.error('Unexpected logout error:', err);
+                if (!isDesktop) setIsOpen(false);
+              }
             })()
           }
         >

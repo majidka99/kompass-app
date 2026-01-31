@@ -1,4 +1,5 @@
-import React, { ErrorInfo } from 'react';
+import type { ErrorInfo } from 'react';
+import React from 'react';
 
 // Add type declaration for Vite's import.meta.env
 declare global {
@@ -37,8 +38,8 @@ class ErrorBoundary extends React.Component<Props, State> {
     // Log error details
     console.error('ErrorBoundary caught an error:', error, errorInfo);
     this.setState({
-      error: error,
-      errorInfo: errorInfo,
+      error,
+      errorInfo,
     });
   }
 

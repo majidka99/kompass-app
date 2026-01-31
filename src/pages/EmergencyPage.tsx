@@ -1,5 +1,5 @@
 import React from 'react';
-import { HelpResource } from '../data/helpResources';
+import type { HelpResource } from '../data/helpResources';
 import BackButton from '../components/ui/BackButton';
 import { useTranslation } from 'react-i18next';
 import FailsafeWrapper from '../components/FailsafeWrapper';

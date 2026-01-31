@@ -1,12 +1,14 @@
-import { Session } from '@supabase/supabase-js';
+import type { Session } from '@supabase/supabase-js';
 import React, { lazy, Suspense, useEffect, useState } from 'react';
-import { Route, Routes } from 'react-router-dom';
+import { Route, Routes, useLocation } from 'react-router-dom';
 import AchievementPopup from './components/AchievementPopup';
 import DatenschutzModal from './components/DatenschutzModal';
 import GlobalStyle from './components/GlobalStyle';
-import HomePage from './pages/HomePage';
-import NotFoundPage from './pages/NotFoundPage';
+import InstallPromptBanner from './components/InstallPromptBanner';
+import { NovaAssistant } from './components/NovaAssistant';
+import OfflineToast from './components/OfflineToast';
 import OnboardingModal from './components/OnboardingModal';
+import UpdateToast from './components/UpdateToast';
 import Sidebar from './components/layout/Sidebar';
 import SmartLoading from './components/ui/SmartLoading';
 import { emojiList } from './data/emojis';
@@ -18,18 +20,16 @@ import { useTheme } from './hooks/useTheme';
 import { useUI } from './hooks/useUI';
 import { useUserData } from './hooks/useUserData';
 import AchievementsPage from './pages/AchievementsPage';
+import HomePage from './pages/HomePage';
+import LandingPage from './pages/LandingPage';
+import LoginPage from './pages/LoginPage';
+import NotFoundPage from './pages/NotFoundPage';
 import { shareAchievement, shareSkill } from './utils/shareUtils';
 import { supabase } from './utils/supabase';
 import MoodCompassView from './views/MoodCompassView';
-import SchoolSupportView from './views/SchoolSupport/SchoolSupportView';
-import PanicScreen from './views/PanicScreen';
-import OfflineToast from './components/OfflineToast';
-import InstallPromptBanner from './components/InstallPromptBanner';
-import UpdateToast from './components/UpdateToast';
-import LandingPage from './pages/LandingPage';
-import { NovaAssistant } from './components/NovaAssistant';
-import { useLocation } from 'react-router-dom';
 import NovaSettings from './views/NovaSettings';
+import PanicScreen from './views/PanicScreen';
+import SchoolSupportView from './views/SchoolSupport/SchoolSupportView';
 
 // Lazy-loaded Komponenten
 const ChatPage = lazy(() => import('./pages/ChatPage'));
@@ -70,6 +70,8 @@ function AuthenticatedApp() {
     setWordFiles,
     skillsList,
     setSkillsList,
+    skillsCompleted,
+    setSkillsCompleted,
     hasGoalsReminder,
   } = useUserData();
 
@@ -154,6 +156,8 @@ function AuthenticatedApp() {
                   setWordFiles={setWordFiles}
                   skillsList={skillsList}
                   setSkillsList={setSkillsList}
+                  skillsCompleted={skillsCompleted}
+                  setSkillsCompleted={setSkillsCompleted}
                 />
               }
             />
@@ -230,14 +234,30 @@ export default function App(): React.ReactElement {
     }
   }, [session, setShowWelcome]);
 
-  const SKIP_WELCOME = true;
-
   if (loading) {
     return <SmartLoading message="Verbindung wird hergestellt..." />;
   }
 
-  if (!session && !SKIP_WELCOME) {
-    return <LandingPage />;
+  // If there's a session, show the authenticated app
+  if (session) {
+    return <AuthenticatedApp />;
   }
-  return <AuthenticatedApp />;
+
+  // If no session, show public routes (landing, login)
+  return (
+    <div>
+      <GlobalStyle />
+      <Suspense fallback={<SmartLoading message="Seite wird geladen..." />}>
+        <Routes>
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/login" element={<LoginPage />} />
+          {/* Redirect any other routes to landing when not authenticated */}
+          <Route path="*" element={<LandingPage />} />
+        </Routes>
+      </Suspense>
+      <OfflineToast />
+      <InstallPromptBanner />
+      <UpdateToast />
+    </div>
+  );
 }

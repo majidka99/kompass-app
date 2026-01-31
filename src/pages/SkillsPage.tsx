@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import BackButton from '../components/ui/BackButton';
 import DeleteButton from '../components/ui/DeleteButton';
@@ -15,10 +15,8 @@ interface SkillsProps {
   setWordFiles: (files: WordFile[]) => void;
   skillsList: Skill[];
   setSkillsList: (skills: Skill[]) => void;
-}
-
-interface SkillsDoneState {
-  [key: number]: boolean;
+  skillsCompleted: Record<string, boolean>;
+  setSkillsCompleted: (completed: Record<string, boolean>) => void;
 }
 
 export default function Skills({
@@ -27,19 +25,15 @@ export default function Skills({
   setWordFiles,
   skillsList,
   setSkillsList,
+  skillsCompleted,
+  setSkillsCompleted,
 }: SkillsProps): React.ReactElement {
   const { t } = useTranslation();
-  const [done, setDone] = useState<SkillsDoneState>(
-    () => (JSON.parse(localStorage.getItem('kompass_skills_done') || '{}') as SkillsDoneState) || {}
-  );
+
   const [isUploading, setIsUploading] = useState<boolean>(false);
   const [parsedLines, setParsedLines] = useState<string[]>([]);
   const [newSkill, setNewSkill] = useState<string>('');
   const inputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    localStorage.setItem('kompass_skills_done', JSON.stringify(done));
-  }, [done]);
 
   async function handleFile(e: React.ChangeEvent<HTMLInputElement>): Promise<void> {
     const files = e.target.files;
@@ -104,71 +98,76 @@ export default function Skills({
       <BackButton />
       <h2>{t('skills.title')}</h2>
       <ul style={{ listStyle: 'none', padding: 0 }}>
-        {skillsList.map((skill, i) => (
-          <li
-            key={i}
-            className={done[i] ? 'done' : ''}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              padding: '8px 0 8px 12px',
-              borderBottom: '1px solid #eee',
-            }}
-          >
-            <input
-              type="checkbox"
-              checked={done[i] || false}
-              onChange={() => setDone(prev => ({ ...prev, [i]: !prev[i] }))}
+        {skillsList.map((skill, i) => {
+          const skillKey = skill.startsWith('skills.defaultSkills.') ? t(skill) : skill;
+          // Use the original skill (translation key) as the key in skillsCompleted, not the translated text
+          const isCompleted = skillsCompleted[skill] || false;
+
+          return (
+            <li
+              key={i}
+              className={isCompleted ? 'done' : ''}
               style={{
-                width: '18px',
-                height: '18px',
-                cursor: 'pointer',
-                marginRight: '12px',
-              }}
-            />
-            <span
-              className="text-content"
-              style={{
-                flex: 1,
-                fontSize: '14px',
-                lineHeight: '1.5',
-                textDecoration: done[i] ? 'line-through' : 'none',
-                color: done[i] ? '#888' : 'inherit',
+                display: 'flex',
+                alignItems: 'center',
+                padding: '8px 0 8px 12px',
+                borderBottom: '1px solid #eee',
               }}
             >
-              {skill.startsWith('skills.defaultSkills.') ? t(skill) : skill}
-            </span>
-            <div style={{ display: 'flex', alignItems: 'center' }}>
-              <DeleteButton
-                onDelete={() => {
-                  // Update the skillsList by filtering out the deleted skill
-                  setSkillsList(skillsList.filter((_, idx) => idx !== i));
-                  // Update the done state to reflect the new indices
-                  const newDone: SkillsDoneState = {};
-                  Object.entries(done).forEach(([key, value]) => {
-                    const keyNum = parseInt(key);
-                    if (keyNum < i) {
-                      // Indices before the deleted item remain the same
-                      newDone[keyNum] = value as boolean;
-                    } else if (keyNum > i) {
-                      // Indices after the deleted item shift down by 1
-                      newDone[keyNum - 1] = value as boolean;
-                    }
-                    // The deleted item's done state is removed
-                  });
-                  setDone(newDone);
+              <input
+                type="checkbox"
+                checked={isCompleted}
+                onChange={() => {
+                  const newCompleted = { ...skillsCompleted };
+                  if (isCompleted) {
+                    delete newCompleted[skill];
+                  } else {
+                    newCompleted[skill] = true;
+                  }
+                  setSkillsCompleted(newCompleted);
                 }}
-                ariaLabel={t('ariaLabels.deleteSkill')}
+                style={{
+                  width: '18px',
+                  height: '18px',
+                  cursor: 'pointer',
+                  marginRight: '12px',
+                }}
               />
-              <div className="actions" style={{ marginRight: '8px', marginLeft: '8px' }}>
-                <ShareButton
-                  onClick={() => shareSkill(skill)}
-                  ariaLabel={t('ariaLabels.shareSkill')}
+              <span
+                className="text-content"
+                style={{
+                  flex: 1,
+                  fontSize: '14px',
+                  lineHeight: '1.5',
+                  textDecoration: isCompleted ? 'line-through' : 'none',
+                  color: isCompleted ? '#888' : 'inherit',
+                }}
+              >
+                {skillKey}
+              </span>
+              <div style={{ display: 'flex', alignItems: 'center' }}>
+                <DeleteButton
+                  onDelete={() => {
+                    // Remove skill from skillsList
+                    setSkillsList(skillsList.filter((_, idx) => idx !== i));
+
+                    // Remove the completed status for this skill
+                    const newCompleted = { ...skillsCompleted };
+                    delete newCompleted[skill];
+                    setSkillsCompleted(newCompleted);
+                  }}
+                  ariaLabel={t('ariaLabels.deleteSkill')}
                 />
+                <div className="actions" style={{ marginRight: '8px', marginLeft: '8px' }}>
+                  <ShareButton
+                    onClick={() => shareSkill(skill)}
+                    ariaLabel={t('ariaLabels.shareSkill')}
+                  />
+                </div>
               </div>
-            </div>
-          </li>
-        ))}
+            </li>
+          );
+        })}
       </ul>
       <div style={{ marginTop: 14 }}>
         <label>

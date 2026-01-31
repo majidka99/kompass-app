@@ -1,5 +1,5 @@
 import React from 'react';
-import { SidebarItem } from '../types/index';
+import type { SidebarItem } from '../types/index';
 
 interface QuickAccessProps {
   items: SidebarItem[];

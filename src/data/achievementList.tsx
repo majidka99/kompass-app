@@ -1,5 +1,5 @@
 import { Award, Medal, Shield, Star, Trophy } from 'lucide-react';
-import { Achievement } from '../types/index';
+import type { Achievement } from '../types/index';
 export const achievementList: Achievement[] = [
   {
     id: 'points-10',

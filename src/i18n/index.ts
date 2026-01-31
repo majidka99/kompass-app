@@ -18,9 +18,11 @@ void i18n
     fallbackLng: 'de',
     returnNull: false,
     returnEmptyString: false,
-    debug: true,
+    debug: false,
     interpolation: {
       escapeValue: false,
+      prefix: '{',
+      suffix: '}',
     },
     detection: {
       order: ['localStorage', 'navigator'],

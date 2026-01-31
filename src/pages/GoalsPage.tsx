@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import MoodCompass from '../components/shared/MoodCompass';
-import { Emoji } from '../data/emojis';
 import { useTranslation } from 'react-i18next';
-import { Achievement, CalendarNotes, Goal, Symptoms } from '../types/index';
-import { showErrorToast, showSuccessToast } from '../utils/toastUtils';
+import MoodCompass from '../components/shared/MoodCompass';
 import BackButton from '../components/ui/BackButton';
 import DeleteButton from '../components/ui/DeleteButton';
 import ShareButton from '../components/ui/ShareButton';
+import type { Emoji } from '../data/emojis';
+import type { Achievement, CalendarNotes, Goal, Symptoms } from '../types/index';
+import { showErrorToast, showSuccessToast } from '../utils/toastUtils';
 
 interface DeinWegProps {
   goals: Goal[];
@@ -24,18 +24,18 @@ interface DeinWegProps {
 }
 
 export default function DeinWeg({
-  goals,
+  goals = [],
   setGoals,
-  achievements,
+  achievements = [],
   setAchievements,
-  calendarNotes,
+  calendarNotes = {},
   setCalendarNotes,
-  symptoms,
+  symptoms = {},
   setSymptoms,
   shareAchievement,
   showReminder,
-  emojiList,
-  templates,
+  emojiList = [],
+  templates = [],
 }: DeinWegProps): React.ReactElement {
   const { t } = useTranslation();
   const [goalInput, setGoalInput] = useState('');
@@ -91,6 +91,7 @@ export default function DeinWeg({
 
     const dateSymptoms = symptoms[selectedDate];
     setSymptomScore(dateSymptoms && dateSymptoms.length > 0 ? dateSymptoms[0].intensity : 0);
+    setSelectedMood(dateSymptoms && dateSymptoms.length > 0 ? dateSymptoms[0].title : null);
   }, [selectedDate, calendarNotes, symptoms]);
 
   const saveNote = () => {
@@ -109,7 +110,7 @@ export default function DeinWeg({
       ...symptoms,
       [selectedDate]: [
         {
-          title: selectedMood || t('journal.categories.general'),
+          title: selectedMood ?? t('journal.categories.general'),
           intensity: symptomScore,
         },
       ],
@@ -120,12 +121,24 @@ export default function DeinWeg({
   };
 
   const formatDateGerman = (dateString: string): string => {
-    const [year, month, day] = dateString.split('-');
-    return `${day}.${month}.${year}`;
+    if (!dateString || typeof dateString !== 'string') {
+      return new Date().toLocaleDateString('de-DE'); // Return today's date as fallback
+    }
+    try {
+      const parts = dateString.split('-');
+      if (parts.length !== 3) {
+        return new Date().toLocaleDateString('de-DE'); // Return today's date as fallback
+      }
+      const [year, month, day] = parts;
+      return `${day}.${month}.${year}`;
+    } catch (error) {
+      console.warn('Date formatting error:', error);
+      return new Date().toLocaleDateString('de-DE'); // Return today's date as fallback
+    }
   };
 
   const currentNote = calendarNotes[selectedDate];
-  const hasCurrentNote = currentNote && currentNote.text;
+  const hasCurrentNote = currentNote?.text;
 
   return (
     <div className="card">
@@ -146,8 +159,8 @@ export default function DeinWeg({
 
       <div className="stat-banner">
         {t('journal.weeklyProgress')
-          .replace('{count}', goals.filter(g => g.completed).length.toString())
-          .replace('{plural}', goals.filter(g => g.completed).length !== 1 ? 'e' : '')}
+          .replace('{count}', goals.filter(g => g && g.completed).length.toString())
+          .replace('{plural}', goals.filter(g => g && g.completed).length !== 1 ? 'e' : '')}
       </div>
 
       <div className="section">
@@ -198,32 +211,34 @@ export default function DeinWeg({
         <span style={{ minWidth: 30, display: 'inline-block' }}>{symptomScore}</span>
       </div>
 
-      {emojiList && (
+      {emojiList && Array.isArray(emojiList) && (
         <div className="emoji-row">
-          {emojiList.map(em => (
-            <span
-              key={em.emoji}
-              className={`emoji-selector ${emoji === em.emoji ? 'active' : ''} ${justSelectedEmoji === em.emoji ? 'just-selected' : ''}`}
-              onClick={() => {
-                setEmoji(em.emoji);
-                setJustSelectedEmoji(em.emoji);
-                setTimeout(() => setJustSelectedEmoji(''), 300);
-              }}
-              title={em.label}
-              aria-label={em.label}
-              tabIndex={0}
-              onKeyDown={e => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                  e.preventDefault();
+          {emojiList
+            .filter(em => em && em.emoji && em.label)
+            .map(em => (
+              <span
+                key={em.emoji}
+                className={`emoji-selector ${emoji === em.emoji ? 'active' : ''} ${justSelectedEmoji === em.emoji ? 'just-selected' : ''}`}
+                onClick={() => {
                   setEmoji(em.emoji);
                   setJustSelectedEmoji(em.emoji);
                   setTimeout(() => setJustSelectedEmoji(''), 300);
-                }
-              }}
-            >
-              {em.emoji}
-            </span>
-          ))}
+                }}
+                title={em.label}
+                aria-label={em.label}
+                tabIndex={0}
+                onKeyDown={e => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    setEmoji(em.emoji);
+                    setJustSelectedEmoji(em.emoji);
+                    setTimeout(() => setJustSelectedEmoji(''), 300);
+                  }
+                }}
+              >
+                {em.emoji}
+              </span>
+            ))}
         </div>
       )}
 
@@ -250,34 +265,42 @@ export default function DeinWeg({
           </button>
         </div>
         <ul>
-          {goals.map((g, i) => (
-            <li key={i} className={g.completed ? 'done' : ''}>
-              <input type="checkbox" checked={g.completed} onChange={() => toggleGoal(i)} />
-              <span className="text-content">{g.text}</span>
-              <div className="actions">
-                <DeleteButton
-                  onDelete={() => setGoals(goals.filter((_, idx) => idx !== i))}
-                  ariaLabel={t('ariaLabels.removeGoal')}
+          {goals
+            .filter(g => g && g.text)
+            .map((g, i) => (
+              <li key={i} className={g.completed ? 'done' : ''}>
+                <input
+                  type="checkbox"
+                  checked={g.completed || false}
+                  onChange={() => toggleGoal(i)}
                 />
-              </div>
-            </li>
-          ))}
+                <span className="text-content">{g.text}</span>
+                <div className="actions">
+                  <DeleteButton
+                    onDelete={() => setGoals(goals.filter((_, idx) => idx !== i))}
+                    ariaLabel={t('ariaLabels.removeGoal')}
+                  />
+                </div>
+              </li>
+            ))}
         </ul>
       </div>
 
       <div className="section">
         <h3>{t('journal.sections.achievements')}</h3>
-        {templates && (
+        {templates && Array.isArray(templates) && (
           <div className="templates">
-            {templates.map((value, i) => (
-              <button
-                key={i}
-                className="template-btn"
-                onClick={() => setAchievementInput(t(value))}
-              >
-                {t(value)}
-              </button>
-            ))}
+            {templates
+              .filter(value => value && typeof value === 'string')
+              .map((value, i) => (
+                <button
+                  key={i}
+                  className="template-btn"
+                  onClick={() => setAchievementInput(t(value))}
+                >
+                  {t(value)}
+                </button>
+              ))}
           </div>
         )}
         <div className="form-row">
@@ -289,23 +312,25 @@ export default function DeinWeg({
           <button onClick={addAchievement}>+</button>
         </div>
         <ul>
-          {achievements.map((achievement, i) => (
-            <li key={i}>
-              <span className="text-content">
-                {formatDateGerman(achievement.date)}: {achievement.text}
-              </span>
-              <div className="actions">
-                <ShareButton
-                  onClick={() => shareAchievement(achievement)}
-                  ariaLabel={t('ariaLabels.shareAchievement')}
-                />
-                <DeleteButton
-                  onDelete={() => setAchievements(achievements.filter((_, idx) => idx !== i))}
-                  ariaLabel={t('ariaLabels.removeAchievement')}
-                />
-              </div>
-            </li>
-          ))}
+          {achievements
+            .filter(achievement => achievement && achievement.date && achievement.text)
+            .map((achievement, i) => (
+              <li key={i}>
+                <span className="text-content">
+                  {formatDateGerman(achievement.date)}: {achievement.text}
+                </span>
+                <div className="actions">
+                  <ShareButton
+                    onClick={() => shareAchievement(achievement)}
+                    ariaLabel={t('ariaLabels.shareAchievement')}
+                  />
+                  <DeleteButton
+                    onDelete={() => setAchievements(achievements.filter((_, idx) => idx !== i))}
+                    ariaLabel={t('ariaLabels.removeAchievement')}
+                  />
+                </div>
+              </li>
+            ))}
         </ul>
       </div>
     </div>

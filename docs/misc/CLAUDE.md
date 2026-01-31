@@ -15,6 +15,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `npm run format:check` - Check if code is properly formatted
 - `npm run type-check` - Run TypeScript type checking without emitting files
 
+### Testing Commands
+
+- `npm run test` - Run tests in watch mode with Vitest
+- `npm run test:run` - Run tests once
+- `npm run test:ui` - Run tests with Vitest UI
+- `npm run test:coverage` - Run tests with coverage report
+
 ### Pre-commit Hooks
 
 - Husky and lint-staged are configured to run on pre-commit
@@ -50,9 +57,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **Service Layer**:
 
-- `storageService.ts` - localStorage abstraction
+- `storageService.ts` - localStorage abstraction with encryption support
 - `gptService.ts` - AI chatbot integration
 - `supabase.ts` - Backend API calls
+- `errorHandlingService.ts` - Comprehensive error handling with automatic fallback strategies
+- `encryptionService.ts` - Client-side data encryption for sensitive healthcare data
+- `dataService.ts` - Unified data operations and validation
+- `syncService.ts` - Data synchronization between local and remote storage
 
 ### Key Directories
 
@@ -100,6 +111,16 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **Mood Tracking**: MoodCompassView for emotional state monitoring
 
+**Error Handling**: Comprehensive ErrorHandlingService with automatic fallback strategies, retry logic, and recovery actions for critical healthcare app reliability
+
+### Testing Architecture
+
+- **Framework**: Vitest with jsdom environment
+- **Testing Library**: React Testing Library for component testing
+- **Coverage**: V8 provider with HTML/text/json reports
+- **Setup**: Global test setup in `src/test/setup.ts`
+- **Path Alias**: `@` points to `src/` directory for imports
+
 ## Development Guidelines
 
 ### File Naming & Structure
@@ -122,6 +143,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Use useState for component-local state
 - Persistent data goes through storageService to localStorage
 - All user data operations should go through UserDataContext
+- State setters automatically handle persistence via useCallback optimization
+- Context providers use lazy initialization to avoid unnecessary localStorage access on re-renders
 
 ### Styling Approach
 
@@ -136,6 +159,26 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Use custom hooks for reusable logic
 - Error boundaries wrap the entire app
 - Prefer functional components with hooks over class components
+
+### Healthcare App Considerations
+
+**Data Security**:
+
+- Use encryptionService for sensitive user data
+- Never store unencrypted healthcare information
+- All storage operations should go through dataService for validation
+
+**Error Handling**:
+
+- Critical operations must use errorHandlingService for healthcare reliability
+- Implement fallback strategies for network failures (offline mode)
+- Recovery actions for critical errors with user confirmation
+
+**Reliability Patterns**:
+
+- Graceful degradation when services are unavailable
+- Automatic retry logic for transient failures
+- Comprehensive logging for troubleshooting without exposing sensitive data
 
 ## Important Notes
 

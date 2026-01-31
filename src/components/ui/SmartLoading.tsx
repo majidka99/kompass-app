@@ -1,4 +1,5 @@
-import { JSX, useEffect, useState } from 'react';
+import type { JSX } from 'react';
+import { useEffect, useState } from 'react';
 import Loading from './Loading';
 import { useTranslation } from 'react-i18next'; // ✅
 

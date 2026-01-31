@@ -1,5 +1,6 @@
 import { useContext } from 'react';
-import { UserDataContext, UserDataContextType } from '../context/UserDataContext';
+import type { UserDataContextType } from '../context/UserDataContext';
+import { UserDataContext } from '../context/UserDataContext';
 
 export function useUserData(): UserDataContextType {
   const context = useContext(UserDataContext);

@@ -1,4 +1,5 @@
-import React, { createContext, ReactNode, useEffect, useState } from 'react';
+import type { ReactNode } from 'react';
+import React, { createContext, useEffect, useState } from 'react';
 import * as storageService from '../services/storageService';
 
 export interface UIContextType {

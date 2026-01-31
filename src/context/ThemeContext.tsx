@@ -1,4 +1,5 @@
-import React, { createContext, ReactNode, useEffect, useState } from 'react';
+import type { ReactNode } from 'react';
+import React, { createContext, useEffect, useState } from 'react';
 import type { BackgroundOptions } from '../data/backgrounds';
 import { backgrounds } from '../data/backgrounds';
 import type { Theme } from '../data/themes';

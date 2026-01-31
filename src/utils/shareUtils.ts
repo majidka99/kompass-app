@@ -3,7 +3,7 @@
  */
 import { showErrorToast, showInfoToast, showSuccessToast } from './toastUtils';
 
-import { Achievement } from '../types/index';
+import type { Achievement } from '../types/index';
 
 // Interface for shareable achievements
 export interface ShareableAchievement {

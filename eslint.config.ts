@@ -25,6 +25,12 @@ export default [
       '.idea',
       '.DS_Store',
       'Thumbs.db',
+      'vitest.config.ts',
+      'vite.config.ts',
+      'tailwind.config.js',
+      'postcss.config.js',
+      'scripts/**',
+      'supabase/**',
     ],
   },
   {

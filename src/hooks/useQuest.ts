@@ -1,6 +1,6 @@
 // src/hooks/useQuests.ts
 import { useState, useEffect } from 'react';
-import { Quest } from '../types/gamification';
+import type { Quest } from '../types/gamification';
 import { weeklyQuests } from '../data/questTemplates';
 
 const STORAGE_KEY = 'kompass_quests';

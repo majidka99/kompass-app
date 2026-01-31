@@ -27,7 +27,7 @@ export default function LandingPage() {
       </ul>
       <div className="flex gap-4">
         <Link
-          to="/"
+          to="/login"
           className="bg-white text-[#2f4f4f] font-semibold px-4 py-2 rounded-xl shadow hover:bg-gray-100 transition"
         >
           App starten

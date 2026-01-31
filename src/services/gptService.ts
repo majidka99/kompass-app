@@ -46,7 +46,7 @@ export async function fetchGPTResponse(mood: string): Promise<string> {
 
     const data = (await response.json()) as OpenAIResponse;
 
-    if (!data.choices || !data.choices[0]?.message?.content) {
+    if (!data.choices?.[0]?.message?.content) {
       console.warn('Unvollständige Antwort von GPT:', data);
       return moodMockResponses[mood] || 'Ich konnte gerade keinen Tipp finden.';
     }
